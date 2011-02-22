@@ -18,6 +18,27 @@ var VERSION = JSON.parse(fs.readFileSync(__dirname + '/../package.json')).versio
 
 sys.puts('Packaging Cocos2D JavaScript version ' + VERSION);
 
+function mkdir(dir, mode) {
+    mode = mode || 511; // Octal = 0777;
+    
+    if (dir[0] != '/') {
+        dir = path.join(process.cwd(), dir);
+    }
+
+    var paths = [dir];
+    var d = dir;
+    while ((d = path.dirname(d)) && d != '/') {
+        paths.unshift(d);
+    }
+
+    for (var i = 0, len = paths.length; i < len; i++) {
+        var p = paths[i];
+        if (!path.existsSync(p)) {
+            fs.mkdirSync(p, mode);
+        }
+    }
+}
+
 /**
  * Generates an NSIS installer script to install the contents of a given
  * directory and returns it as a string.
@@ -138,6 +159,29 @@ function findFilesToPackage(dir, callback) {
 
 }
 
+function copyFiles(files, dir, callback) {
+    var realFiles = [];
+    var copyFile = function(i) {
+        var file = files[i],
+            dst = path.join(dir, file),
+            dirname = path.dirname(dst);
+
+        realFiles.push(dst);
+        
+        mkdir(dirname);
+        // console.log("Processing file: ", i, files.length, file);
+        sys.pump(fs.createReadStream(file), fs.createWriteStream(dst, {mode: fs.statSync(file).mode}), function() {
+            if (i < files.length - 1) {
+                copyFile(i + 1);
+            } else {
+                callback(realFiles);
+            }
+        });
+    }
+
+    copyFile(0);
+}
+
 function generateZip(files, zipName) {
     zipName += '.zip';
 
@@ -157,21 +201,25 @@ function generateZip(files, zipName) {
     });
 }
 function generateGZip(files, zipName) {
+    var folderName = zipName;
     zipName += '.tar.gz';
     sys.puts('Generating .tar.gz archive : ' + zipName);
     if (path.exists(zipName)) {
         fs.unlink(zipName);
     }
 
-    var tar = spawn('tar', ['-czf', zipName].concat(files));
+    copyFiles(files, folderName, function(realFiles) {
+        var tar = spawn('tar', ['-czf', zipName].concat(realFiles));
 
-    tar.stderr.on('data', function(data) {
-        sys.print(data);
+        tar.stderr.on('data', function(data) {
+            sys.print(data);
+        });
+        
+        tar.on('exit', function() {
+            sys.puts('Generated ' + zipName + ' archive');
+        });
     });
-    
-    tar.on('exit', function() {
-        sys.puts('Generated ' + zipName + ' archive');
-    });
+
 }
 
 

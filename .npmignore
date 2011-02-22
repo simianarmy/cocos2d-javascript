@@ -7,6 +7,4 @@ jsdocs/
 docs/
 public/cocos2d.js
 public/tests.js
-cocos2d-*.exe
-cocos2d-*.gz
-cocos2d-*.zip
+cocos2d-javascript-v*
