@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/usr/bin/env bash
 # lets check if we have the submodules initialized
 
 if [ -h $0 ]; then
@@ -7,7 +7,7 @@ else
     DIR=$(dirname $0)
 fi
 
-if which node &> /dev/null
+if `which node > /dev/null`
 then
     # User has node installed, use that
     node "$DIR/cocos.js" "$@"
