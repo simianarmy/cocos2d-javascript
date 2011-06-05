@@ -7,6 +7,7 @@ var util = require('util'),
     Director = require('../Director').Director,
     TextureAtlas = require('../TextureAtlas').TextureAtlas,
     Node = require('./Node').Node,
+    colr = require('color'),
     geo = require('geometry'),
     ccp = geo.ccp;
 
@@ -18,10 +19,21 @@ var Sprite = Node.extend(/** @lends cocos.nodes.Sprite# */{
     quad: null,
     flipX: false,
     flipY: false,
+    /** 
+     * Offset Position (used by Zwoptex)
+     */
     offsetPosition: null,
     unflippedOffsetPositionFromCenter: null,
     untrimmedSize: null,
-
+    
+    /**
+     * RGB color
+     * @type color.colorRGBA
+     */
+    color: null,
+    colorUnmodified: null,
+    opacityModifyRGB: true,
+    
     /**
      * A small 2D graphics than can be animated
      *
@@ -47,7 +59,8 @@ var Sprite = Node.extend(/** @lends cocos.nodes.Sprite# */{
         this.set('offsetPosition', ccp(0, 0));
         this.set('unflippedOffsetPositionFromCenter', ccp(0, 0));
 
-
+        this.color = this.colorUnmodified = colr.rgb(255, 255, 255);
+        
         if (frame) {
             texture = frame.get('texture');
             rect    = frame.get('rect');
@@ -77,7 +90,8 @@ var Sprite = Node.extend(/** @lends cocos.nodes.Sprite# */{
 
             this.quad = {
                 drawRect: {origin: ccp(0, 0), size: rect.size},
-                textureRect: rect
+                textureRect: rect,
+                color: colr.rgba(255, 255, 255, 255)
             };
         }
 
@@ -226,7 +240,7 @@ var Sprite = Node.extend(/** @lends cocos.nodes.Sprite# */{
         this.set('dirty', false);
         this.set('recursiveDirty', false);
     },
-
+    
     draw: function (ctx) {
         if (!this.quad) {
             return;
@@ -260,6 +274,71 @@ var Sprite = Node.extend(/** @lends cocos.nodes.Sprite# */{
         }
 
         this.set('textureRect', {rect: frame.rect, rotated: frame.rotated, untrimmedSize: frame.originalSize});
+    },
+    
+    // RGBA protocol
+    
+    /**
+     * @private
+     */
+    _updateColor: function() {
+        if (!this.quad) {
+            return;
+        }
+        this.quad.color = colr.rgba(this.color.r, this.color.g, this.color.b, this.opacity);
+    },
+    
+    /**
+     * @setter opacity
+     */
+    set_opacity: function(opacity) {
+        this.opacity = opacity;
+        
+        // special opacity for premultiplied textures
+        if (this.opacityModifyRGB) {
+            this.set('color', this.colorUnmodified);
+        }
+        this._updateColor();
+    },
+    
+    /**
+     * @setter color
+     * @type ColorRGB
+     */
+    set_color: function(color) {
+      this.color = this.colorUnmodified = color;
+      
+      if (this.opacityModifyRGB) {
+          this.color.r = color.r * this.opacity/255;
+          this.color.g = color.g * this.opacity/255;
+          this.color.b = color.b * this.opacity/255;
+      }
+      this._updateColor();
+    },
+    
+    /**
+     * @getter color
+     * @type ColorRGB
+     */
+    get_color: function() {
+        if (this.opacityModifyRGB) {
+            return this.colorUnmodified;
+        }
+        return this.color;
+    },
+    
+    /**
+     * @setter opacityModifyRGB
+     * @type Boolean
+     */
+    set_opacityModifyRGB: function(modify) {
+        var oldColor = this.color;
+        this.opacityModifyRGB = modify;
+        this.set('color', oldColor);
+    },
+    
+    doesOpacityModifyRGB: function() {
+        return this.opacityModifyRGB;
     }
 });
 

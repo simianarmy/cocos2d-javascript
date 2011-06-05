@@ -411,5 +411,6 @@ var BArray = BObject.extend(/** @lends BArray# */{
     }
 });
 
+
 exports.BObject = BObject;
 exports.BArray = BArray;

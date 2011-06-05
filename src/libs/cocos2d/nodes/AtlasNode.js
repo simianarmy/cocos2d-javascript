@@ -46,7 +46,7 @@ var AtlasNode = SpriteBatchNode.extend(/** @lends cocos.AtlasNode# */{
      * @extends cocos.nodes.SpriteBatchNode
      * @constructs
      *
-     * @opt {String} file Path to Atals image
+     * @opt {String} file Path to Atlas image
      * @opt {Integer} itemWidth Character width
      * @opt {Integer} itemHeight Character height
      * @opt {Integer} itemsToRender Quantity of items to render
