@@ -90,8 +90,7 @@ var Sprite = Node.extend(/** @lends cocos.nodes.Sprite# */{
 
             this.quad = {
                 drawRect: {origin: ccp(0, 0), size: rect.size},
-                textureRect: rect,
-                color: colr.rgba(255, 255, 255, 255)
+                textureRect: rect
             };
         }
 
@@ -282,25 +281,28 @@ var Sprite = Node.extend(/** @lends cocos.nodes.Sprite# */{
      * @private
      */
     _updateColor: function() {
+        // textAtlas supports color
         if (!this.quad) {
             return;
         }
-        this.quad.color = colr.rgba(this.color.r, this.color.g, this.color.b, this.opacity);
+        this.get('textureAtlas').set('color', colr.rgba(this.color.r, this.color.g, this.color.b, this.opacity));
     },
     
     /**
      * @setter opacity
      */
+     /*
     set_opacity: function(opacity) {
         this.opacity = opacity;
         
         // special opacity for premultiplied textures
         if (this.opacityModifyRGB) {
             this.set('color', this.colorUnmodified);
+        } else {
+            this._updateColor();
         }
-        this._updateColor();
     },
-    
+    */
     /**
      * @setter color
      * @type ColorRGB

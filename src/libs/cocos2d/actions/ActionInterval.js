@@ -4,6 +4,7 @@
 
 var util = require('util'),
     act = require('./Action'),
+    colr = require('color'),
     geo = require('geometry'),
     ccp = geo.ccp;
 
@@ -715,6 +716,96 @@ var FadeTo = ActionInterval.extend(/** @lends cocos.actions.FadeTo# */{
     }
 });
 
+var TintTo = ActionInterval.extend(/** @lends cocos.actions.TintTo# */ {
+    /** 
+     * starting, ending color
+     * @type color.ColorRGBA
+     */
+    to: null,
+    from: null,
+    
+    /**
+     * @class TintTo Tints a node that supports color manipulation from current tint to a custom one.
+     *
+     * @memberOf cocos.actions
+     * @constructor
+     * @extends cocos.actions.ActionInterval
+     *
+     * @opt {Integer} red red value [0-255]
+     * @opt {Integer} green green value [0-255]
+     * @opt {Integer} blue blue value [0-255]
+     */
+    init: function(opts) {
+        TintTo.superclass.init.call(this, opts);
+        
+        this.to = colr.rgb(opts.red, opts.green, opts.blue);
+    },
+    
+    startWithTarget: function(target) {
+        TintTo.superclass.startWithTarget.call(this, target);
+        
+        this.from = this.target.get('color');
+    },
+    
+    update: function(t) {
+        this.target.set('color', colr.rgb(this.from.r + (this.to.r - this.from.r) * t,
+            this.from.g + (this.to.g - this.from.g) * t,
+            this.from.b + (this.to.b - this.from.g) * t));
+    },
+    
+    copy: function() {
+        return TintTo.create({duration: this.duration, red: this.to.r, green: this.to.g, blue: this.to.b});
+    },
+    
+    reverse: function() {
+        throw "TintTo reverse() not supported!";
+    }
+});
+
+var TintBy = ActionInterval.extend(/** @lends cocos.actions.TintBy# */ {
+    deltaColor: null,
+    fromColor: null,
+    
+    /**
+     * @class TintBy Tints a Node that supports color manipulation from current tint to a custom one
+     *
+     * @memberOf cocos.actions
+     * @constructor
+     * @extends cocos.actions.ActionInterval
+     *
+     * @opt {Integer} red red value [0-255]
+     * @opt {Integer} green green value [0-255]
+     * @opt {Integer} blue blue value [0-255]
+     */
+    init: function(opts) {
+        TintBy.superclass.init.call(this, {duration: opts.duration});
+        
+        this.deltaColor = colr.rgb(opts.red, opts.green, opts.blue);
+    },
+    
+    startWithTarget: function(target) {
+       TintBy.superclass.startWithTarget.call(this, target);
+       
+       var tcolor = this.target.get('color');
+       this.fromColor = colr.rgb(tcolor.r, tcolor.g, tcolor.b);
+    },
+    
+    update: function(t) {
+        this.target.set('color', colr.rgb(this.fromColor.r + this.deltaColor.r * t, 
+            this.fromColor.g + this.deltaColor.g * t, 
+            this.fromColor.b + this.deltaColor.b * t)
+        );
+    },
+    
+    copy: function() {
+        return TintBy.create({duration: this.get('duration'), red: this.deltaColor.r, green: this.deltaColor.g, blue: this.deltaColor.b});
+    },
+    
+    reverse: function() {
+        return TintBy.create({duration: this.get('duration'), red: -this.deltaColor.r, green: -this.deltaColor.g, blue: -this.deltaColor.b});
+    }
+});
+
 var Sequence = ActionInterval.extend(/** @lends cocos.actions.Sequence# */{
     /**
      * Array of actions to run
@@ -1100,6 +1191,8 @@ exports.Blink = Blink;
 exports.FadeIn = FadeIn;
 exports.FadeOut = FadeOut;
 exports.FadeTo = FadeTo;
+exports.TintTo = TintTo;
+exports.TintBy = TintBy;
 exports.Spawn = Spawn;
 exports.Sequence = Sequence;
 exports.Repeat = Repeat;

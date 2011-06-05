@@ -224,14 +224,12 @@ tests.SpriteBatchNode1 = SpriteDemo.extend(/** @lends SpriteBatchNode1.prototype
         } else if (rand < 0.4) {
             action = actions.RotateBy.create({duration: 3, angle: 360});
         } else if (rand < 0.6) {
-            action = actions.ScaleBy.create({duration: 3, scale: 2});
-            //action = cocos.Blink.create({duration:3, scale:2});
+            action = actions.Blink.create({duration: 5, blinks:13});
         } else if (rand < 0.8) {
             action = actions.RotateBy.create({duration: 3, angle: 360});
             //action = cocos.TintBy.create({duration:3, scale:2});
         } else {
-            action = actions.ScaleBy.create({duration: 3, scale: 2});
-            //action = cocos.FadeOut.create({duration: 3, scale: 2});
+            action = actions.FadeOut.create({duration: 3});
         }
 
         actionBack = action.reverse();

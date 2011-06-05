@@ -17,7 +17,9 @@ var TextureAtlas = BObject.extend(/** @lends cocos.TextureAtlas# */{
     quads: null,
     imgElement: null,
     texture: null,
-
+    bufferCanvas: null,
+    bufferContext: null,
+    
     /**
      * A single texture that can represent lots of smaller images
      *
@@ -34,9 +36,9 @@ var TextureAtlas = BObject.extend(/** @lends cocos.TextureAtlas# */{
             data = opts.data,
             texture = opts.texture,
             canvas = opts.canvas;
-
+        
         if (canvas) {
-            // If we've been given a canvas element then we'll use that for our image
+            // If we've been given a canvas element, use it when drawing
             this.imgElement = canvas;
         } else {
             texture = Texture2D.create({texture: texture, file: file, data: data});
@@ -46,7 +48,44 @@ var TextureAtlas = BObject.extend(/** @lends cocos.TextureAtlas# */{
 
         this.quads = [];
     },
+        
+    initImagePixelBuffer: function() {
+        // Create canvas and context buffers one time
+        if (!this.bufferCanvas) {
+            this.bufferCanvas = document.createElement('canvas');
+            // Set canvas dimensions to image dimensions 
+            this.bufferCanvas.width = this.imgElement.width;
+            this.bufferCanvas.height = this.imgElement.height;
+        }
+        // Create the offscreen buffer
+        if (!this.bufferContext) {
+            this.bufferContext = this.bufferCanvas.getContext('2d');
+        }
+    },
+    
+    /**
+     * Sets the texture's global color by compositing the color over the texture
+     * Using technique described here:
+     * http://stackoverflow.com/questions/2688961/how-do-i-tint-an-image-with-html5-canvas
+     *
+     * @setter color
+     * @type ColorRGB
+     */
+    set_color: function(color) {
+        // Initialize offscreen buffers
+        this.initImagePixelBuffer();
+        
+        this.bufferContext.clearRect(0, 0, this.bufferCanvas.width, this.bufferCanvas.height);
+        
+        // fill offscreen buffer with the tint color
+        this.bufferContext.fillStyle = color.toString();
+        this.bufferContext.fillRect(0, 0, this.bufferCanvas.width, this.bufferCanvas.height);
 
+        // destination atop makes a result with an alpha channel identical to fg, but with all pixels retaining their original color *as far as I can tell*
+        this.bufferContext.globalCompositeOperation = "destination-atop";
+        this.bufferContext.drawImage(this.imgElement, 0, 0, this.bufferCanvas.width, this.bufferCanvas.height);
+    },
+    
     insertQuad: function (opts) {
         var quad = opts.quad,
             index = opts.index || 0;
@@ -102,7 +141,7 @@ var TextureAtlas = BObject.extend(/** @lends cocos.TextureAtlas# */{
         }
 
         ctx.scale(scaleX, scaleY);
-
+    
         var img = this.get('imgElement');
         ctx.drawImage(img, 
             sx, sy, // Draw slice from x,y
@@ -110,6 +149,18 @@ var TextureAtlas = BObject.extend(/** @lends cocos.TextureAtlas# */{
             dx, dy, // Draw at 0, 0
             dw, dh  // Draw size
         );
+        // to tint the image, draw it first
+        // then set the global alpha to the amount that you want to tint it, 
+        // and draw the offscreen color buffer directly on top of it.
+        if (this.bufferContext) {
+            ctx.globalAlpha = 0.5;
+            ctx.drawImage(this.bufferCanvas, 
+                sx, sy, // Draw slice from x,y
+                sw, sh, // Draw slice size
+                dx, dy, // Draw at 0, 0
+                dw, dh  // Draw size
+            );
+        }
         ctx.scale(1, 1);
     }
 });

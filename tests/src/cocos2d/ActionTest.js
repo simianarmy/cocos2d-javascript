@@ -19,6 +19,7 @@ var transitions = [
     "Jump",
     "Bezier",
     "Blink",
+    "Tint",
     "Sequence",
     "Sequence2",
     "Spawn", 
@@ -328,6 +329,23 @@ tests.Blink = ActionDemo.extend(/** @lends Blink.prototype# */{
 	}
 });
 
+tests.Tint = ActionDemo.extend(/** @lends Tint.prototype# */{
+    title: 'TintTo / TintBy',
+    subtitle: '',
+
+	onEnter: function() {
+		tests.Tint.superclass.onEnter.call(this);
+		
+		this.centerSprites(2);
+		
+		var action1 = actions.TintTo.create({duration: 2, red: 255, green: 0, blue: 255});
+		var action2 = actions.TintBy.create({duration: 2, red: -127, green: -255, blue: -127});
+		var action2Back = action2.reverse();
+		
+		this.get('tamara').runAction(action1);
+		this.get('kathia').runAction(actions.Sequence.create({actions: [action2, action2Back]}));
+	}
+});
 
 /**
  * @class

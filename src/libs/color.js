@@ -2,6 +2,8 @@
 /*jslint undef: true, strict: true, white: true, newcap: true, browser: true, indent: 4 */
 "use strict";
 
+var util = require('util');
+
 /* 
  * @namespace 
  */
@@ -25,6 +27,10 @@ var color = {
     rgb: function(r, g, b) {
         return new color.rgba(r, g, b, 0);
     }
+};
+
+color.ColorRGBA.prototype.toString = function() {
+    return "rgba(" + Math.floor(this.r) + ", " + Math.floor(this.g) + ", " + Math.floor(this.b) + ", " + this.a + ")";
 };
 
 module.exports = color;
